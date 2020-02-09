@@ -13,6 +13,7 @@ body {
 #button {
     float: left;
     display:inline;
+    clear: left;
 }
 .content{
     padding-left: 250px;
