@@ -19,7 +19,234 @@
         </div>
         <div class="content">
             <p> My Final Project is a game called Attack of the Monkeys. It is a top down shooter where the player has to prevent any monkeys from reaching the bottom of the screen. To win the game, the player has to eliminate 30 monkeys without losing. You can move your character using the up, down, left and right arrow keys and press the mouse to shoot.<p>
-            
+            <script> var currentScene = 1;
+var score = 0;
+var stillPlaying = 1;
+// Button object constructor function
+var Button = function(x,y,width,height,label) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.label = label;
+    this.onClick = function() {
+        
+    };
+};
+// Button Prototype
+Button.prototype.draw = function() {
+    fill(189, 45, 45);
+    rect(this.x, this.y, this.width, this.height, 5);
+    fill(0, 0, 0);
+    textSize(19);
+    textAlign(LEFT, TOP);
+    text(this.label, this.x+10, this.y+this.height/4);
+};
+// Function to check if the mouse is in the button
+Button.prototype.isMouseInside = function() {
+    return mouseX > this.x &&
+           mouseX < (this.x + this.width) &&
+           mouseY > this.y &&
+           mouseY < (this.y + this.height);
+        
+};
+
+Button.prototype.handleMouseClick = function() {
+    if (this.isMouseInside()) {
+        this.onClick();
+    }
+};
+var buttonStart = new Button(320,340,57,40,"Start");
+var buttonReturn = new Button(137,260,130,50,"Back to menu");
+
+//Draws scene 1, which is the start menu
+var drawScene1 = function() {
+    background(0, 0, 0);
+    fill(189, 45, 45);
+    var f = createFont("fantasy");
+    textFont(f,60);
+    textAlign(CENTER);
+    text("Attack Of The",200,60);
+    text("Monkeys",200,120);
+    textSize(30);
+    text("How to Play", 200, 180);
+    textSize(25);
+    text("Use the arrow keys to move",200,220);
+    text("and click your mouse to shoot",200,250);
+    text("If any monkeys reach the bottom", 200,280);
+    text("you lose and if you reach a", 200, 310);
+    text("score of 30 you win", 200, 340);
+    buttonStart.draw();
+};
+var player = function(x,y,width,height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+};
+player.prototype.draw = function() {
+   // constrains x and y of player so the player cannot go out of bounds
+    this.x = constrain(this.x,20,380);
+    this.y = constrain(this.y,20,380);
+    fill (135, 135, 135);
+    stroke(0, 0, 0);
+    rect(this.x+4,this.y-31,8,20);
+    fill (98, 117, 69);
+    ellipse(this.x,this.y, this.width,this.height);
+};
+player.prototype.up = function() {
+    this.y -=3;
+};
+player.prototype.down = function() {
+    this.y +=3;
+};
+player.prototype.left = function() {
+    this.x -=3;
+};
+player.prototype.right = function() {
+    this.x +=3;
+};
+var player1 = new player(200,380,40,40);
+
+var bullet = function(x,y) {
+    this.x = x;
+    this.y = y;
+};
+bullet.prototype.draw = function() {
+    fill(140, 135, 0);
+    noStroke();
+    ellipse(this.x,this.y,8,8);
+    this.x = constrain(this.x,20,380);
+    this.y = constrain(this.y,20,380);
+};
+
+var monkey = function(x,y) {
+    this.x = x;
+    this.y = y;
+};
+monkey.prototype.draw = function() {
+    fill(112, 63, 0);
+    stroke(0, 0, 0);
+    ellipse(this.x,this.y,30,30);
+    arc(this.x-14,this.y,10,10,90,270);
+    arc(this.x+14,this.y,10,10,-90,90);
+    bezier(this.x ,this.y-15,this.x,this.y-15,this.x+10, this.y-15, this.x-10,this.y-21);
+    fill(245, 200, 152);
+    arc(this.x,this.y+8,18,10,0,180);
+    
+};
+//arrays to push the amount of monkeys and bullets into
+var monkeys = [];
+var bullets = [];
+
+for (var i = 0; i < 100; i++) {
+    monkeys.push(new monkey(random(50,350),i*100 -10000));
+    bullets.push(new bullet(player1.x, 410));
+}
+
+var drawScene2 = function() {
+    currentScene = 2;
+    background(0, 117, 31);
+    textSize(20);
+    fill(255, 255, 255);
+    text("Score: "+ score,30,30);
+    // Moves the player if up,down left or right arrows are pressed
+    if(keyIsPressed && keyCode === UP) {
+    player1.up();
+    }
+    if(keyIsPressed && keyCode === DOWN) {
+    player1.down();
+    }
+    if(keyIsPressed && keyCode === LEFT) {
+    player1.left();
+    }
+    if(keyIsPressed && keyCode === RIGHT) {
+    player1.right();
+    }
+    player1.draw();
+    for (var k = 0; k < monkeys.length; k++) {
+        monkeys[k].draw();
+        monkeys[k].y +=2;
+        if(mouseIsPressed === true) {
+        bullets[k].x = player1.x+10;
+        bullets[k].y -= 40;
+        bullets[k].draw();
+        }
+        
+        else if(mouseIsPressed === false) {
+        bullets[k].y = player1.y;
+        bullets[k].x = player1.x;
+        }
+        // detects if bullets collide with monkeys and gives score if they do
+        if ((bullets[k].x >= monkeys[k].x-20 && bullets[k].x <= (monkeys[k].x+20 )) &&
+        (bullets[k].y >= monkeys[k].y-20 && bullets[k].y <= (monkeys[k].y +20 ))) {
+        score += 1;
+        monkeys[k].x = 500;
+        }
+        // ends game if monkeys reach bottom
+        if (monkeys[k].x >= 0 && monkeys[k].x <= 400 &&
+        monkeys[k].y >= 400) {
+        stillPlaying = 0;}
+        if (score === 30) {
+            stillPlaying = 2;
+        }
+    }
+    fill(1, 97, 28);
+noStroke();
+ellipse(100,87,50,50);
+ellipse(127,108,50,50);
+ellipse(85,108,50,50);
+ellipse(104,128,50,50);
+
+ellipse(274,179,50,50);
+ellipse(298,198,50,50);
+ellipse(257,206,50,50);
+ellipse(281,222,50,50);
+};
+//loss screen
+var drawScene3 = function() {
+    currentScene = 3;
+    background(255, 0, 0);
+    textSize(40);
+    fill(168, 24, 24);
+    text("Mission Failed",70,150);
+    text("Try Again",108,190);
+    buttonReturn.draw();
+};
+//win screen
+var drawScene4 = function() {
+    currentScene = 4;
+    background(9, 0, 255);
+    textSize(40);
+    fill(255, 255, 255);
+    text("Mission Complete",50,120);
+    text("Nice Job", 130,197);
+    buttonReturn.draw();
+};
+//function to change scene
+draw = function() {
+    if (currentScene === 2) {
+        drawScene2();
+    }
+    if (currentScene === 2 && stillPlaying === 0) {
+        drawScene3();
+    }
+    if (currentScene  === 2 && stillPlaying === 2) {
+        drawScene4();
+    }
+};
+
+//function to click buttons 
+mouseClicked = function() {
+    if (currentScene === 1 && mouseX >= buttonStart.x && mouseX <= buttonStart.x +57 && mouseY >= buttonStart.y && mouseY < buttonStart.y + 40) {
+        drawScene2();
+    } 
+    if (currentScene === 3 || currentScene === 4 && mouseX >= buttonReturn.x && mouseX <= buttonReturn.x +150 && mouseY >= buttonReturn.y && mouseY < buttonReturn.y + 50) {
+        drawScene1();
+    } 
+};
+drawScene1();    
+</script>
             
         
         </div>
